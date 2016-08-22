@@ -21,7 +21,7 @@ our Compliance controls. The auditing cookbook will provide all the inspec
 tests for testing our organization's RHEL 7.x image. It will function as a
 `Role Cookbook` wrapping the https://github.com/chef-cookbooks/audit cookbook.
 
-Our node's will likely utilize a base Role Cookbook to set up the run_list order
+Our systems will likely utilize a base Role Cookbook to set up the run_list order
 which is significant because we want to first harden the OS, followed by
 applying any other Application specific cookbooks, then finally we want our
 auditing cookbook to run last, reporting on the final state of the node.
