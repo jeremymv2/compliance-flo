@@ -197,7 +197,7 @@ Namely reporting can be:
 
 For more detail: https://github.com/chef-cookbooks/audit#overview
 
-## Creating Custom Compliance profiles
+## Creating Custom Compliance Profiles
 Ultimately, you existing organization's Security practitioners will likely want
 to specify custom Compliance controls.  An easy way to accomplish this is with
 InSpec's Profile Inheritance.  
