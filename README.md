@@ -17,14 +17,14 @@ Assuming we are "BrewInc." and we run RHEL 7 internally, we shall christen them
 `brewinc_rhel_hardening` and `brewinc_rhel_auditing`.
 
 The hardening cookbook will house all recipes for ensuring the system adheres to
- our Compliance controls. The auditing cookbook will provide all the inspec
- tests for testing our organization's RHEL 7.x image. It will function as a
- `Role Cookbook` wrapping the https://github.com/chef-cookbooks/audit cookbook.
+our Compliance controls. The auditing cookbook will provide all the inspec
+tests for testing our organization's RHEL 7.x image. It will function as a
+`Role Cookbook` wrapping the https://github.com/chef-cookbooks/audit cookbook.
 
 Our node's will likely utilize a base Role Cookbook to set up the run_list order
- which is significant because we want to first harden the OS, followed by
- applying any other Application specific cookbooks, then finally we want our
- auditing cookbook to run last, reporting on the final state of the node.
+which is significant because we want to first harden the OS, followed by
+applying any other Application specific cookbooks, then finally we want our
+auditing cookbook to run last, reporting on the final state of the node.
 
 ```ruby
 # BrewInc base Role Cookbook
@@ -44,15 +44,15 @@ Inspec is the toolset that allows you to easily scan your entire infrastructure
 for risks and compliance issues and report on them.
 
 As you might suspect, the place to get started with **Compliance as Code** is in
- local development, for instance utilizing: ChefDK's `test-kitchen`.
+local development, for instance utilizing: ChefDK's `test-kitchen`.
 
 First, let's review how the CIS benchmarks are categorized.  Quite simply, they
 are grouped by Operating System flavor and then broken out into Level 1 and
 Level 2.  Level 1 recommendations are settings that should be configured at a
 minimum on a server or a database, and should cause little or no interruption of
- service, whereas Level 2 recommendations are recommended in highly secure
- environments. In some cases Level 2 settings could also lead to reduced
- functionality.
+service, whereas Level 2 recommendations are recommended in highly secure
+environments. In some cases Level 2 settings could also lead to reduced
+functionality.
 
 ```ruby
 # cis-rhel7-level1
@@ -102,7 +102,7 @@ Profiles can be hosted from various locations; for details see: https://github.c
 We could also add the inspec tests to the `test/` directory of our cookbook
 where we normally place our integration tests. If you own Chef Automate
 licenses, you can find the profiles here on your Compliance Server: `/var/opt/chef-compliance/core/runtime/compliance-profiles`.  This would suffice
- when adding tests into `test/`:
+when adding tests into `test/`:
 
 ```yaml
 # .kitchen.yml
@@ -113,7 +113,25 @@ verifier:
 
 All the example above are intended for running in Local Dev or Pipeline context.
 When deployed onto the nodes, the `brewinc_rhel_auditing` cookbook will utilize
+a ruby Hash attribute to control which Compliance Profiles are executed:
 
+```ruby
+audit = {
+  "profiles" => {
+    # org / profile name from Chef Compliance
+    'base/linux' => true,
+    # supermarket url
+    'brewinc/ssh-hardening' => {
+      # location where inspec will fetch the profile from
+      'source' => 'supermarket://hardening/ssh-hardening',
+      'key' => 'value',
+    },
+```
+**Important**
+You will want to set the attribute above based on each Node's OS family type so
+that only the OS appropriate controls are executed and reported.
+
+More examples: https://github.com/chef-cookbooks/audit#configure-node
 
 ## Remediation
 During Local Development, you'll want to remediate the problems detected by the
@@ -139,13 +157,13 @@ end
 
 In the future, Chef Compliance may include remediation recipes, but for now it
 does not.  You will need to create those yourself.  Some possible resources that
- you can quickly leverage can be found on Supermarket: https://supermarket.chef.io/cookbooks?utf8=✓&q=hardening&platforms%5B%5D=
+you can quickly leverage can be found on Supermarket: https://supermarket.chef.io/cookbooks?utf8=✓&q=hardening&platforms%5B%5D=
 
 
 ## Allowing Exceptions
 You may discover that some Applications were built insecurely and break if
 certain hardening is applied.  If that is the case, you can create an array
-attribute which lists the CIS sections that should not be enforced.
+attribute which lists the CIS Control sections that should not be enforced.
 
 ```ruby
 default['hardening_exceptions'] = ['1.2.3','1.4.1',...]
@@ -163,11 +181,11 @@ end
 
 **Important:**
 Do not create a process by which certain InSpec controls are skipped or ignored.
-  Doing so only complicates your ability to quickly understand your Compliance
-  Reports and potentially masks security vulnerabilities that you want to be
-  aware of. Measure your fleet's state of Compliance in its entirety with
-  completeness and with accuracy. Minimize the type of buckets used for reports:
-   "Level1" vs "Level2" is a good example of this.
+Doing so only complicates your ability to quickly understand your Compliance
+Reports and potentially masks security vulnerabilities that you want to be
+aware of. Measure your fleet's state of Compliance in its entirety with
+completeness and with accuracy. Minimize the type of buckets used for reports:
+"Level1" vs "Level2" is a good example of this.
 
 ## Reporting
 There are several options for handling Compliance reports generated by the
@@ -180,3 +198,17 @@ Namely reporting can be:
 For more detail: https://github.com/chef-cookbooks/audit#overview
 
 ## Creating Custom Compliance profiles
+Ultimately, you existing organization's Security practitioners will likely want
+to specify custom Compliance controls.  An easy way to accomplish this is with
+InSpec's Profile Inheritance.  
+
+```ruby
+include_controls 'cis-rhel7-level1' do
+  skip_control 'xccdf_org.cisecurity.benchmarks_rule_1.1.2_Set_nodev_option_for_tmp_Partition'
+
+  control 'brewinc-1.1.0' do
+    impact 0.0
+    ...
+  end
+end
+```
