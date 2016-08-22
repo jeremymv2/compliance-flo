@@ -3,22 +3,16 @@
 As part of your organization's Security Compliance efforts, you will want to be able to quickly understand what risks your infrastructure has so that you are able to remediate and eliminate them from the environment.  Chef provides all the components necessary to automate this process.
 
 ## The Idea
-Let's keep it really simple:
+Let's keep it really simple.
 
- ** Scan -> Harden -> Repeat **
+ **Scan -> Harden -> Repeat**
 
 We'll create a Hardening Cookbook for our organization.  It will be OS specific so as to keep the scope small.
 
-We'll christen it `brewinc_rhel_hardening`
-It will contain all the inspec tests for testing our organization's RHEL 7.x image and all the recipes for ensuring the system adheres to the controls; both Level 1 and 2.  It will server as our `Role Cookbook.`
+We shall christen it `brewinc_rhel_hardening`
+It will have all the inspec tests for testing our organization's RHEL 7.x image and all the recipes for ensuring the system adheres to the controls.  It will serve as a `Role Cookbook` wrapping the https://github.com/chef-cookbooks/audit cookbook.
 
-We'll leverage a Chef Role such as `rhel-linux-base-hardening` to house the run_list, which for now, will just be our `brewinc_rhel_hardening` cookbook.  This role will then be applied to all your RHEL infrastructure.
-
-Every time your fleet converges, Chef executes the hardening recipes, inspec locally scans the systems and then reports back on how compliant they are.
-
-Because you can leverage Test Driven Development and Test Driven Infrastructure, and if you own a Chef Automate license, you now have a repeatable process that should obsolete much of your current manual processes.
-
-Now that's yummy cake!
+With the role cookbook added to the end of the run_list, every time your fleet converges, Chef executes the hardening recipes, inspec locally scans the systems and reports back on how compliant they are.
 
 ## Scanning
 Inspec is the toolset that allows you to easily scan your entire infrastructure for risks and compliance issues and report on them.  The awesome part of how inspec is implemented is in how
@@ -67,6 +61,12 @@ suites:
         - compliance://cis-rhel7-level1
 ```
 
+Profiles can be hosted in various locations; for details see: https://github.com/chef/kitchen-inspec#use-remote-inspec-profiles
+
+## Remediation
+Automate
+Build automated compliance testing and remediation into your pipeline
+
 ```ruby
 # default.rb
 case node['hardening_level']
@@ -88,9 +88,5 @@ file '/etc/shadow' do
 end
 ```
 
-## Report
-Get reports on risks and issues classified by severity and impact levels
-
-## Remediation
-Automate
-Build automated compliance testing and remediation into your pipeline
+## Reporting
+https://github.com/chef-cookbooks/audit#overview
